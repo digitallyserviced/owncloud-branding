@@ -1,0 +1,95 @@
+#!/bin/bash
+TMP=tmp/
+OUTPUT=output/
+SHORTNAME=$1
+THEME_DIR=`pwd`
+mkdir -p ${TMP}
+
+writeThemeQrc ()
+{
+    SHORTNAME=$1
+    cat > theme.qrc <<THEMEQRCDATA
+<RCC>
+    <qresource prefix="/mirall">
+        <file>theme/colored/state-sync-32.png</file>
+        <file>theme/colored/state-pause-32.png</file>
+        <file>theme/colored/state-ok-32.png</file>
+        <file>theme/colored/state-offline-32.png</file>
+        <file>theme/colored/state-error-32.png</file>
+        <file>theme/colored/state-information-32.png</file>
+        <file>theme/black/state-sync-32.png</file>
+        <file>theme/black/state-pause-32.png</file>
+        <file>theme/black/state-ok-32.png</file>
+        <file>theme/black/state-offline-32.png</file>
+        <file>theme/black/state-error-32.png</file>
+        <file>theme/black/state-information-32.png</file>
+        <file>theme/white/state-sync-32.png</file>
+        <file>theme/white/state-pause-32.png</file>
+        <file>theme/white/state-ok-32.png</file>
+        <file>theme/white/state-offline-32.png</file>
+        <file>theme/white/state-error-32.png</file>
+        <file>theme/white/state-information-32.png</file>
+        <file>theme/colored/state-sync-64.png</file>
+        <file>theme/colored/state-pause-64.png</file>
+        <file>theme/colored/state-ok-64.png</file>
+        <file>theme/colored/state-offline-64.png</file>
+        <file>theme/colored/state-error-64.png</file>
+        <file>theme/colored/state-information-64.png</file>
+        <file>theme/black/state-sync-64.png</file>
+        <file>theme/black/state-pause-64.png</file>
+        <file>theme/black/state-ok-64.png</file>
+        <file>theme/black/state-offline-64.png</file>
+        <file>theme/black/state-error-64.png</file>
+        <file>theme/black/state-information-64.png</file>
+        <file>theme/white/state-sync-64.png</file>
+        <file>theme/white/state-pause-64.png</file>
+        <file>theme/white/state-ok-64.png</file>
+        <file>theme/white/state-offline-64.png</file>
+        <file>theme/white/state-error-64.png</file>
+        <file>theme/white/state-information-64.png</file>
+        
+        <file>theme/colored/wizard_logo.png</file>
+        <file>theme/colored/$SHORTNAME-icon-22.png</file>
+        <file>theme/colored/$SHORTNAME-icon-32.png</file>
+        <file>theme/colored/$SHORTNAME-icon-48.png</file>
+        <file>theme/colored/$SHORTNAME-icon-64.png</file>
+        <file>theme/colored/$SHORTNAME-icon-128.png</file>
+    </qresource>
+</RCC>
+
+THEMEQRCDATA
+
+}
+
+rm -Rf theme
+pushd '../!skeleton-1600'
+cp -Rf * ${THEME_DIR}/
+popd
+
+convert template.png -crop 128x128+47+31 png32:${TMP}desktop.icon.png
+
+convert ${TMP}desktop.icon.png -resize 128x128 png32:theme/colored/$SHORTNAME-icon-128.png
+convert ${TMP}desktop.icon.png -resize 64x64 png32:theme/colored/$SHORTNAME-icon-64.png
+convert ${TMP}desktop.icon.png -resize 48x48 png32:theme/colored/$SHORTNAME-icon-48.png
+convert ${TMP}desktop.icon.png -resize 32x32 png32:theme/colored/$SHORTNAME-icon-32.png
+convert ${TMP}desktop.icon.png -resize 22x22 png32:theme/colored/$SHORTNAME-icon-22.png
+convert ${TMP}desktop.icon.png -resize 16x16 png32:theme/colored/$SHORTNAME-icon-16.png
+convert ${TMP}desktop.icon.png -resize 16x16 png32:theme/colored/$SHORTNAME-icon-16.png
+
+convert template.png -crop 132x63+45+293 png32:theme/colored/wizard_logo.png
+
+convert template.png -crop 150x57+222+31 bmp3:nsi/page_header.bmp
+convert template.png -crop 164x314+417+31 bmp3:nsi/welcome.bmp
+
+writeThemeQrc "${SHORTNAME}"
+
+mkdir -p linux-build
+cd linux-build
+rm -Rf *
+cmake -DCMAKE_BUILD_TYPE="Release" /home/xcezzz/mirall -DCSYNC_BUILD_PATH=/home/xcezzz/ocsync-build -DCSYNC_INCLUDE_PATH=/home/xcezzz/ocsync/src -DCMAKE_TOOLCHAIN_FILE=../mirall/admin/win/Toolchain-mingw32-openSUSE.cmake -DOEM_THEME_DIR=${THEME_DIR}
+##OEM_THEME=${THEME_DIR} cmake -DOEM_THEME_DIR=${THEME_DIR} -DQTKEYCHAIN_INCLUDE_DIR=/Users/chris/ -DQTKEYCHAIN_LIBRARY=/Users/chris/qt5keychain-build/libqt5keychain.dylib -DBUILD_WITH_QT4=OFF -DBUILD_OWNCLOUD_OSX_BUNDLE=ON -DCSYNC_BUILD_PATH=/Users/chris/ocsync-build -DCSYNC_INCLUDE_PATH=/Users/chris/ocsync/src -DCMAKE_PREFIX_PATH=/usr/local/Cellar/qt5/5.2.1/lib/cmake/ -DNEON_INCLUDE_DIRS=/usr/local/Cellar/neon/0.30.0/include /Users/chris/mirall 
+make
+make package
+cd ..
+mkdir -p clients
+cp -Rf linux-build/*.exe ./clients/
